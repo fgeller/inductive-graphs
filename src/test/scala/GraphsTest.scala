@@ -1,0 +1,24 @@
+import org.scalatest.FunSpec
+import org.scalatest.matchers.ShouldMatchers
+
+
+class GraphsTest extends FunSpec with ShouldMatchers {
+
+  import Graphs._
+
+  describe("Graphs") {
+
+    it("can reconstruct the base graph from figure 1") {
+      val g = Context(Seq(("left", 2), ("up", 3)), 1, 'a', Seq(("right", 2))) &:
+        Context(Seq(), 2, 'b', Seq(("down", 3))) &:
+        Context(Seq(), 3, 'c', Seq()) &: Empty
+
+      g.toString should endWith("&: Empty")
+      Seq(1, 2, 3) map(_.toString) foreach { node ⇒
+        g.toString should include(node)
+      }
+    }
+
+  }
+
+}
