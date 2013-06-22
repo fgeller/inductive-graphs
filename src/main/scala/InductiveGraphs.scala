@@ -10,6 +10,12 @@ object Graphs extends App {
     def &:[A, B](context: Context[A, B]) = Graphs.&:(context, this)
 
     def isEmpty: Boolean
+
+    def gmap[A, B, C, D](f: Context[A, B] ⇒ Context[C, D]): Graph = this match {
+      case Empty ⇒ Empty
+      case &:(left: Context[A, B], right) ⇒ f(left) &: right.gmap(f)
+    }
+
   }
   case object Empty extends Graph {
     def isEmpty = true
