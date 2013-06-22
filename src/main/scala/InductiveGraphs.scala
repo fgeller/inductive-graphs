@@ -33,9 +33,28 @@ object Graphs extends App {
 
   }
 
+  object Graph {
+    def empty[A, B]: Graph[A, B] = Empty
+  }
+
   case object Empty extends Graph[Nothing, Nothing] {
     def isEmpty = true
     def nodes = Seq()
+  }
+
+  case class SearchNode[A, B](graph: Graph[A, B], node: Node)
+  object FindNode {
+    def unapply[A, B](query: SearchNode[A, B]): Option[(Context[A, B], Graph[A, B])] = {
+      query.graph.ufold((Option.empty[Context[A, B]], Graph.empty[A, B])) { (memo, context) ⇒
+        memo match {
+          case (found, graph) if found.isEmpty && context.node == query.node ⇒ (Some(context), graph)
+          case (maybeFound, graph) ⇒ (maybeFound, context &: graph)
+        }
+      } match {
+        case (None, _)                       ⇒ None
+        case (Some(foundContext), restGraph) ⇒ Some(foundContext, restGraph)
+      }
+    }
   }
 
   final case class &:[A, B](left: Context[A, B], right: Graph[A, B]) extends Graph[A, B] {

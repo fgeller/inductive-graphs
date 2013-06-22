@@ -37,6 +37,21 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       g.ufold(0) { (memo, ctx) ⇒ memo + ctx.value } should be(46)
     }
 
+    it("can use an extractor to find a context") {
+      val testGraph = (Context(Seq(("left", 2)), 1, 23, Seq()) &:
+        Context(Seq(), 2, 46, Seq()) &:
+        Empty)
+      val testNode = 2
+
+      SearchNode(testGraph, testNode) match {
+        case FindNode(Context(in, 2, label, out), restGraph) ⇒
+          in should be(out)
+          label should be (46)
+          restGraph should not be testGraph
+        case _ ⇒ fail("should find the context for node 2")
+      }
+    }
+
     it("knows its nodes") {
       Empty.nodes should be('empty)
       (Context(Seq(("left", 2)), 1, 23, Seq()) &:
