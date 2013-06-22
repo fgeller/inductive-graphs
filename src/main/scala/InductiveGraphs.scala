@@ -15,6 +15,10 @@ object Graphs extends App {
       case Empty ⇒ Empty
       case &:(left: Context[A, B], right) ⇒ f(left) &: right.gmap(f)
     }
+    def grev[A, B]: Graph = gmap { left: Context[A, B] ⇒
+      Context(left.outgoing, left.node, left.value, left.incoming)
+    }
+
 
   }
   case object Empty extends Graph {

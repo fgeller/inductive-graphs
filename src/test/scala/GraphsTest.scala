@@ -18,6 +18,12 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       (Context(Seq(), 1, 'a', Seq()) &: Empty).gmap(fun).toString should include("☉")
     }
 
+    it("can reverse edge directions") {
+      val g = (Context(Seq(("left", 2)), 1, 'a', Seq()) &: Context(Seq(), 2, 'b', Seq()) &: Empty)
+      g.toString should include("[(left,2)]→")
+      g.grev.toString should include("→[(left,2)]")
+    }
+
     it("can reconstruct the base graph from figure 1") {
       val g = Context(Seq(("left", 2), ("up", 3)), 1, 'a', Seq(("right", 2))) &:
         Context(Seq(), 2, 'b', Seq(("down", 3))) &:
