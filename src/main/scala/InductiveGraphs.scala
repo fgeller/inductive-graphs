@@ -31,6 +31,11 @@ object Graphs extends App {
       Context(ctx.incoming ++ ctx.outgoing, ctx.node, ctx.value, ctx.incoming ++ ctx.outgoing)
     }
 
+    def degree(node: Node) = SearchNode(this, node) match {
+      case FindNode(Context(in, _, _, out), _) ⇒ Some(in.size + out.size)
+      case _                                   ⇒ None
+    }
+
   }
 
   object Graph {

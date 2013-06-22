@@ -52,6 +52,16 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       }
     }
 
+    it("knows the degree of a node") {
+      val testGraph = (Context(Seq(("left", 2)), 1, 23, Seq()) &:
+        Context(Seq(), 2, 46, Seq()) &:
+        Empty)
+
+      testGraph.degree(2) should be (Some(0))
+      testGraph.degree(1) should be (Some(1))
+      testGraph.degree(0) should be (None)
+    }
+
     it("knows its nodes") {
       Empty.nodes should be('empty)
       (Context(Seq(("left", 2)), 1, 23, Seq()) &:
