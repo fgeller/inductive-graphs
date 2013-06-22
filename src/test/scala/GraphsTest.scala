@@ -31,6 +31,13 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       g.ufold(0) { (memo, ctx) ⇒ memo + ctx.value } should be(46)
     }
 
+    it("knows its nodes") {
+      Empty.nodes should be('empty)
+      (Context(Seq(("left", 2)), 1, 23, Seq()) &:
+        Context(Seq(), 2, 23, Seq()) &:
+        Empty).nodes should be (Seq(2, 1))
+    }
+
     it("can reconstruct the base graph from figure 1") {
       val g = Context(Seq(("left", 2), ("up", 3)), 1, 'a', Seq(("right", 2))) &:
         Context(Seq(), 2, 'b', Seq(("down", 3))) &:

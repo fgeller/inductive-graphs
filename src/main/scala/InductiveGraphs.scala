@@ -25,12 +25,18 @@ object Graphs extends App {
       case &:(left: Context[A, B], right) ⇒ right.ufold(f(memo, left))(f)
     }
 
+    def nodes: Seq[Node]
+
   }
+
   case object Empty extends Graph[Nothing, Nothing] {
     def isEmpty = true
+    def nodes = Seq()
   }
+
   final case class &:[A, B](left: Context[A, B], right: Graph[A, B]) extends Graph[A, B] {
     def isEmpty = false
+    def nodes = right.ufold(List(left.node)) { (memo, ctx) ⇒ ctx.node :: memo }
     override def toString = left + " &: " + right
   }
 
