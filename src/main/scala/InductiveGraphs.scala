@@ -6,25 +6,30 @@ object Graphs extends App {
     override def toString = s"([${incoming mkString " "}]→ $node($value) →[${outgoing mkString " "}])"
   }
 
-  sealed trait Graph {
-    def &:[A, B](context: Context[A, B]) = Graphs.&:(context, this)
+  sealed trait Graph[+A, +B] {
+    def &:[C >: A, D >: B](context: Context[C, D]) = Graphs.&:(context, this)
 
     def isEmpty: Boolean
 
-    def gmap[A, B, C, D](f: Context[A, B] ⇒ Context[C, D]): Graph = this match {
-      case Empty ⇒ Empty
+    def gmap[C >: A, D >: B](f: Context[A, B] ⇒ Context[C, D]): Graph[C, D] = this match {
+      case Empty                          ⇒ Empty
       case &:(left: Context[A, B], right) ⇒ f(left) &: right.gmap(f)
     }
-    def grev[A, B]: Graph = gmap { left: Context[A, B] ⇒
+
+    def grev: Graph[A, B] = gmap { left: Context[A, B] ⇒
       Context(left.outgoing, left.node, left.value, left.incoming)
     }
 
+    def ufold[C](memo: C)(f: (C, Context[A, B]) ⇒ C): C = this match {
+      case Empty                          ⇒ memo
+      case &:(left: Context[A, B], right) ⇒ right.ufold(f(memo, left))(f)
+    }
 
   }
-  case object Empty extends Graph {
+  case object Empty extends Graph[Nothing, Nothing] {
     def isEmpty = true
   }
-  final case class &:[A, B](left: Context[A, B], right: Graph) extends Graph {
+  final case class &:[A, B](left: Context[A, B], right: Graph[A, B]) extends Graph[A, B] {
     def isEmpty = false
     override def toString = left + " &: " + right
   }
