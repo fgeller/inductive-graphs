@@ -36,6 +36,11 @@ object Graphs extends App {
       case _                                   ⇒ None
     }
 
+    def delete(node: Node) = SearchNode(this, node) match {
+      case FindNode(_, restGraph) ⇒ restGraph
+      case _                      ⇒ this
+    }
+
   }
 
   object Graph {

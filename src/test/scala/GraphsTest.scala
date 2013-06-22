@@ -62,6 +62,16 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       testGraph.degree(0) should be (None)
     }
 
+    it("can delete a node") {
+      val testGraph = (Context(Seq(("left", 2)), 1, 23, Seq()) &:
+        Context(Seq(), 2, 46, Seq()) &:
+        Empty)
+
+      testGraph.delete(1) should be (Context(Seq(), 2, 46, Seq()) &: Empty)
+      testGraph.delete(2) should be (Context(Seq(("left", 2)), 1, 23, Seq()) &: Empty)
+      testGraph.delete(0) should be (testGraph)
+    }
+
     it("knows its nodes") {
       Empty.nodes should be('empty)
       (Context(Seq(("left", 2)), 1, 23, Seq()) &:
