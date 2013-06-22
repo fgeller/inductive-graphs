@@ -8,9 +8,14 @@ object Graphs extends App {
 
   sealed trait Graph {
     def &:[A, B](context: Context[A, B]) = Graphs.&:(context, this)
+
+    def isEmpty: Boolean
   }
-  case object Empty extends Graph
+  case object Empty extends Graph {
+    def isEmpty = true
+  }
   final case class &:[A, B](left: Context[A, B], right: Graph) extends Graph {
+    def isEmpty = false
     override def toString = left + " &: " + right
   }
 
