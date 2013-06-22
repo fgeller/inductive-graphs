@@ -27,6 +27,10 @@ object Graphs extends App {
 
     def nodes: Seq[Node]
 
+    def undir: Graph[A, B] = gmap { ctx ⇒
+      Context(ctx.incoming ++ ctx.outgoing, ctx.node, ctx.value, ctx.incoming ++ ctx.outgoing)
+    }
+
   }
 
   case object Empty extends Graph[Nothing, Nothing] {

@@ -24,6 +24,12 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       g.grev.toString should include("→[(left,2)]")
     }
 
+    it("can make a graph undirectional") {
+      val g = (Context(Seq(("left", 2)), 1, 'a', Seq()) &: Context(Seq(), 2, 'b', Seq()) &: Empty)
+      g.undir.toString should include("[(left,2)]→")
+      g.undir.toString should include("→[(left,2)]")
+    }
+
     it("can use fold to sum up values") {
       val g = (Context(Seq(("left", 2)), 1, 23, Seq()) &:
         Context(Seq(), 2, 23, Seq()) &:
