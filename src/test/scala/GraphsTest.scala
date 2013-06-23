@@ -112,9 +112,9 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       Context(Seq(), 3, 'c', Seq()) &: Empty
 
       Graph.asDot(g) should be("""digraph g {
-1 -> 2;
 2 -> 1;
 3 -> 1;
+1 -> 2;
 2 -> 3;
 }""")
     }

@@ -9,7 +9,13 @@ object Graphs extends App {
 
   object Graph {
     def empty[A, B]: Graph[A, B] = Empty
-    def asDot(graph: Graph[_, _]) = s"digraph g {\n${graph.toDot}}"
+    def asDot(graph: Graph[_, _]) = {
+      val edges = graph.ufold(Set.empty[(Node, Node)]) { (memo, context) ⇒
+        memo ++ context.incoming.map(i ⇒ (i._2, context.node)) ++ context.outgoing.map(o ⇒ (context.node, o._2))
+      } map { case (from, to) ⇒ s"$from -> $to;\n" } mkString
+
+      s"digraph g {\n$edges}"
+    }
   }
 
   sealed trait Graph[+A, +B] {
@@ -57,12 +63,6 @@ object Graphs extends App {
     def gsuc(node: Node) = SearchNode(this, node) match {
       case FindNode(Context(_, _, _, out), _) ⇒ out.map(_._2).toSet
       case _                                  ⇒ Set()
-    }
-
-    def toDot: String = this match {
-      case Empty ⇒ ""
-      case &:(left, right) ⇒
-        (left.outgoing.map(out ⇒ s"${left.node} -> ${out._2};\n") ++ (left.incoming.map(in ⇒ s"${in._2} -> ${left.node};\n")) ++ right.toDot) mkString
     }
 
     def leaves: Set[Node] = this.ufold(this.nodes) { (memo, context) ⇒
