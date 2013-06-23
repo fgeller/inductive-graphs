@@ -119,7 +119,7 @@ b -> c;
 }""")
     }
 
-    it("knows its leaves (nodes without outgoing edges)") {
+    it("knows its leaves") {
       val g =
         Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
         Context(Seq(((), 3)),          2, 'r', Seq()) &:
@@ -127,10 +127,10 @@ b -> c;
         Context(Seq(((), 5)),          4, 's', Seq()) &:
         Context(Seq(),                 5, 'w', Seq()) &: Empty
 
-      g.leaves should be(Set(1))
+      g.leaves should be(Set(5))
     }
 
-    it("knows its roots  (nodes without incoming edges)") {
+    it("knows its roots") {
       val g =
         Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
         Context(Seq(((), 3)),          2, 'r', Seq()) &:
@@ -138,21 +138,10 @@ b -> c;
         Context(Seq(((), 5)),          4, 's', Seq()) &:
         Context(Seq(),                 5, 'w', Seq()) &: Empty
 
-      g.roots should be(Set(5))
+      g.roots should be(Set(1))
     }
 
-    it("can sort itself topologically") {
-      val g =
-        Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
-        Context(Seq(((), 3)),          2, 'r', Seq()) &:
-        Context(Seq(((), 5)),          3, 'd', Seq()) &:
-        Context(Seq(((), 5)),          4, 's', Seq()) &:
-        Context(Seq(),                 5, 'w', Seq()) &: Empty
-
-      g.topologicallySorted(List(1)).toList should be(List(1, 4, 2, 3, 5))
-    }
-
-    it("can sort itself topologically and does not include unneeded nodes") {
+    it("the roots and their children are all nodes") {
       val g =
         Context(Seq(((), 1)),          0, 'z', Seq()) &:
         Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
@@ -161,7 +150,55 @@ b -> c;
         Context(Seq(((), 5)),          4, 's', Seq()) &:
         Context(Seq(),                 5, 'w', Seq()) &: Empty
 
-      g.topologicallySorted(List(1)).toList should be(List(1, 4, 2, 3, 5))
+      g.children(g.roots.toList).toSet should be(g.nodes)
+    }
+
+    it("can identify children") {
+      val g =
+        Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
+        Context(Seq(((), 3)),          2, 'r', Seq()) &:
+        Context(Seq(((), 5)),          3, 'd', Seq()) &:
+        Context(Seq(((), 5)),          4, 's', Seq()) &:
+        Context(Seq(),                 5, 'w', Seq()) &: Empty
+
+      g.children(List(1)) should be(List(1, 4, 2, 3, 5))
+    }
+
+    it("its children do not include unneeded nodes") {
+      val g =
+        Context(Seq(((), 1)),          0, 'z', Seq()) &:
+        Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
+        Context(Seq(((), 3)),          2, 'r', Seq()) &:
+        Context(Seq(((), 5)),          3, 'd', Seq()) &:
+        Context(Seq(((), 5)),          4, 's', Seq()) &:
+        Context(Seq(),                 5, 'w', Seq()) &: Empty
+
+      g.children(List(1)) should be(List(1, 4, 2, 3, 5))
+    }
+
+    it("more children tests") {
+      val names = (0 to 13).map(num ⇒ num → num).toMap
+      val g =
+        Context(Seq(((),  1)),            0, names(0), Seq()) &:
+        Context(Seq(((),  2)),            1, names(1), Seq()) &:
+        Context(Seq(((), 10), ((),  3)),  2, names(2), Seq()) &:
+        Context(Seq(((),  5), ((),  4)),  3, names(3), Seq()) &:
+        Context(Seq(((),  5)),            4, names(4), Seq()) &:
+        Context(Seq(((),  8), ((),  6)),  5, names(5), Seq()) &:
+        Context(Seq(((), 11)),            6, names(6), Seq()) &:
+        Context(Seq(((),  8)),            7, names(7), Seq()) &:
+        Context(Seq(((), 11)),            8, names(8), Seq()) &:
+        Context(Seq(((), 13), ((), 10)),  9, names(9), Seq()) &:
+        Context(Seq(((), 11)),           10, names(10), Seq()) &:
+        Context(Seq(((), 13)),           11, names(11), Seq()) &:
+        Context(Seq(((), 13)),           12, names(12), Seq()) &:
+        Context(Seq(),                   13, names(13), Seq()) &: Empty
+
+      g.children(List(13)) should be(List(13))
+      g.children(List(12)) should be(List(12, 13))
+      g.children(List( 7)) should be(List(7, 8, 11, 13))
+      g.children(List( 5)) should be(List(5, 8, 6, 11, 13))
+      g.children(List( 0)).toSet should be(Set(0, 1, 2, 3, 4, 5, 6, 8, 10, 11, 13))
     }
   }
 
