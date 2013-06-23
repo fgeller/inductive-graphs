@@ -129,6 +129,7 @@ class GraphsTest extends FunSpec with ShouldMatchers {
 
       g.leaves should be(Set(1))
     }
+
     it("knows its roots  (nodes without incoming edges)") {
       val g =
         Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
@@ -138,6 +139,29 @@ class GraphsTest extends FunSpec with ShouldMatchers {
         Context(Seq(),                 5, 'w', Seq()) &: Empty
 
       g.roots should be(Set(5))
+    }
+
+    it("can sort itself topologically") {
+      val g =
+        Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
+        Context(Seq(((), 3)),          2, 'r', Seq()) &:
+        Context(Seq(((), 5)),          3, 'd', Seq()) &:
+        Context(Seq(((), 5)),          4, 's', Seq()) &:
+        Context(Seq(),                 5, 'w', Seq()) &: Empty
+
+      g.topologicallySorted(List(1)).toList should be(List(1, 4, 2, 3, 5))
+    }
+
+    it("can sort itself topologically and does not include unneeded nodes") {
+      val g =
+        Context(Seq(((), 1)),          0, 'z', Seq()) &:
+        Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
+        Context(Seq(((), 3)),          2, 'r', Seq()) &:
+        Context(Seq(((), 5)),          3, 'd', Seq()) &:
+        Context(Seq(((), 5)),          4, 's', Seq()) &:
+        Context(Seq(),                 5, 'w', Seq()) &: Empty
+
+      g.topologicallySorted(List(1)).toList should be(List(1, 4, 2, 3, 5))
     }
   }
 

@@ -73,6 +73,17 @@ object Graphs extends App {
       if (context.incoming.isEmpty) memo
       else memo - context.node
     }
+
+    def topologicallySorted(toVisit: List[Node]): List[Node] = {
+      if (toVisit.isEmpty || this.isEmpty) Nil
+      else SearchNode(this, toVisit.head) match {
+        case FindNode(context, _) ⇒
+          val sorted = topologicallySorted((context.incoming.map(_._2).toList) ++ toVisit.tail)
+          if (sorted contains toVisit.head) sorted
+          else toVisit.head :: sorted
+        case _ ⇒ topologicallySorted(toVisit tail)
+      }
+    }
   }
 
   case object Empty extends Graph[Nothing, Nothing]
