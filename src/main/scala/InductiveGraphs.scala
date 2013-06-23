@@ -41,6 +41,10 @@ object Graphs extends App {
       case _                      ⇒ this
     }
 
+    def gsuc(node: Node) = SearchNode(this, node) match {
+      case FindNode(Context(_, _, _, out), _) ⇒ out map (_._2)
+      case _                                  ⇒ Seq()
+    }
   }
 
   object Graph {

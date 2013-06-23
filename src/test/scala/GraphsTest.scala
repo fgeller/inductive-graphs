@@ -62,6 +62,15 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       testGraph.degree(0) should be (None)
     }
 
+    it("finds the successors of a node") {
+      val testGraph = (Context(Seq(), 1, 23, Seq(("left", 2))) &:
+        Context(Seq(), 2, 46, Seq()) &:
+        Empty)
+
+      testGraph.gsuc(1) should be (Seq(2))
+      testGraph.gsuc(2) should be (Seq())
+    }
+
     it("can delete a node") {
       val testGraph = (Context(Seq(("left", 2)), 1, 23, Seq()) &:
         Context(Seq(), 2, 46, Seq()) &:
