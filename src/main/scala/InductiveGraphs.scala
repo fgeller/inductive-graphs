@@ -3,6 +3,7 @@ object Graphs extends App {
   type Node = Int
   type Adj[+B] = Seq[(B, Node)]
   case class Context[+A, +B](incoming: Adj[B], node: Node, value: A, outgoing: Adj[B]) {
+    def suc = outgoing map (_._2)
     override def toString = s"([${incoming mkString " "}]→ $node($value) →[${outgoing mkString " "}])"
   }
 

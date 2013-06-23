@@ -6,6 +6,13 @@ class GraphsTest extends FunSpec with ShouldMatchers {
 
   import Graphs._
 
+  describe("Context") {
+    it("knows the successor nodes") {
+      Context(Seq(), 1, 1, Seq((2, 2))).suc should be (Seq(2))
+      Context(Seq(), 1, 1, Seq()).suc should be (Seq())
+    }
+  }
+
   describe("Graphs") {
 
     it("can be empty") {
