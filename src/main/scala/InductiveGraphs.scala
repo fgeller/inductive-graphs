@@ -13,6 +13,7 @@ object Graphs extends App {
   }
 
   sealed trait Graph[+A, +B] {
+
     def &:[C >: A, D >: B](context: Context[C, D]) = Graphs.&:(context, this)
 
     def isEmpty: Boolean = this match {
@@ -34,9 +35,9 @@ object Graphs extends App {
       case &:(left: Context[A, B], right) ⇒ right.ufold(f(memo, left))(f)
     }
 
-    def nodes: Seq[Node] = this match {
-      case Empty                          ⇒ Seq()
-      case &:(left: Context[A, B], right) ⇒ right.ufold(List(left.node)) { (memo, ctx) ⇒ ctx.node :: memo }
+    def nodes: Set[Node] = this match {
+      case Empty                          ⇒ Set()
+      case &:(left: Context[A, B], right) ⇒ right.ufold(Set(left.node)) { (memo, ctx) ⇒ memo + ctx.node }
     }
 
     def undir: Graph[A, B] = gmap { ctx ⇒
@@ -54,14 +55,23 @@ object Graphs extends App {
     }
 
     def gsuc(node: Node) = SearchNode(this, node) match {
-      case FindNode(Context(_, _, _, out), _) ⇒ out map (_._2)
-      case _                                  ⇒ Seq()
+      case FindNode(Context(_, _, _, out), _) ⇒ out.map(_._2).toSet
+      case _                                  ⇒ Set()
     }
 
     def toDot: String = this match {
       case Empty ⇒ ""
       case &:(left, right) ⇒
         (left.outgoing.map(out ⇒ s"${left.node} -> ${out._2};\n") ++ (left.incoming.map(in ⇒ s"${in._2} -> ${left.node};\n")) ++ right.toDot) mkString
+    }
+
+    def leaves: Set[Node] = this.ufold(this.nodes) { (memo, context) ⇒
+      memo diff context.incoming.map(_._2).toSet
+    }
+
+    def roots: Set[Node] = this.ufold(this.nodes) { (memo, context) ⇒
+      if (context.incoming.isEmpty) memo
+      else memo - context.node
     }
   }
 

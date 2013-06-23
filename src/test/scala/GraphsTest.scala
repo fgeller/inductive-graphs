@@ -74,8 +74,8 @@ class GraphsTest extends FunSpec with ShouldMatchers {
         Context(Seq(), 2, 46, Seq()) &:
         Empty)
 
-      testGraph.gsuc(1) should be (Seq(2))
-      testGraph.gsuc(2) should be (Seq())
+      testGraph.gsuc(1) should be (Set(2))
+      testGraph.gsuc(2) should be (Set())
     }
 
     it("can delete a node") {
@@ -92,7 +92,7 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       Empty.nodes should be('empty)
       (Context(Seq(("left", 2)), 1, 23, Seq()) &:
         Context(Seq(), 2, 23, Seq()) &:
-        Empty).nodes should be (Seq(2, 1))
+        Empty).nodes should be (Set(2, 1))
     }
 
     it("can reconstruct the base graph from figure 1") {
@@ -117,6 +117,27 @@ class GraphsTest extends FunSpec with ShouldMatchers {
 3 -> 1;
 2 -> 3;
 }""")
+    }
+
+    it("knows its leaves (nodes without outgoing edges)") {
+      val g =
+        Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
+        Context(Seq(((), 3)),          2, 'r', Seq()) &:
+        Context(Seq(((), 5)),          3, 'd', Seq()) &:
+        Context(Seq(((), 5)),          4, 's', Seq()) &:
+        Context(Seq(),                 5, 'w', Seq()) &: Empty
+
+      g.leaves should be(Set(1))
+    }
+    it("knows its roots  (nodes without incoming edges)") {
+      val g =
+        Context(Seq(((), 4), ((), 2)), 1, 'a', Seq()) &:
+        Context(Seq(((), 3)),          2, 'r', Seq()) &:
+        Context(Seq(((), 5)),          3, 'd', Seq()) &:
+        Context(Seq(((), 5)),          4, 's', Seq()) &:
+        Context(Seq(),                 5, 'w', Seq()) &: Empty
+
+      g.roots should be(Set(5))
     }
   }
 
