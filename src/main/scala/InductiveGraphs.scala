@@ -7,6 +7,11 @@ object Graphs extends App {
     override def toString = s"([${incoming mkString " "}]→ $node($value) →[${outgoing mkString " "}])"
   }
 
+  object Graph {
+    def empty[A, B]: Graph[A, B] = Empty
+    def asDot(graph: Graph[_, _]) = s"digraph g {\n${graph.toDot}}"
+  }
+
   sealed trait Graph[+A, +B] {
     def &:[C >: A, D >: B](context: Context[C, D]) = Graphs.&:(context, this)
 
@@ -52,10 +57,12 @@ object Graphs extends App {
       case FindNode(Context(_, _, _, out), _) ⇒ out map (_._2)
       case _                                  ⇒ Seq()
     }
-  }
 
-  object Graph {
-    def empty[A, B]: Graph[A, B] = Empty
+    def toDot: String = this match {
+      case Empty ⇒ ""
+      case &:(left, right) ⇒
+        (left.outgoing.map(out ⇒ s"${left.node} -> ${out._2};\n") ++ (left.incoming.map(in ⇒ s"${in._2} -> ${left.node};\n")) ++ right.toDot) mkString
+    }
   }
 
   case object Empty extends Graph[Nothing, Nothing]

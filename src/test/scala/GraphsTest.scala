@@ -106,6 +106,18 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       }
     }
 
+    it("can be visualized via dot/graphviz") {
+      val g = Context(Seq(("left", 2), ("up", 3)), 1, 'a', Seq(("right", 2))) &:
+        Context(Seq(), 2, 'b', Seq(("down", 3))) &:
+      Context(Seq(), 3, 'c', Seq()) &: Empty
+
+      Graph.asDot(g) should be("""digraph g {
+1 -> 2;
+2 -> 1;
+3 -> 1;
+2 -> 3;
+}""")
+    }
   }
 
 }
