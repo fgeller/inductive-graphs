@@ -10,8 +10,13 @@ object Graphs extends App {
   object Graph {
     def empty[A, B]: Graph[A, B] = Empty
     def asDot(graph: Graph[_, _]) = {
-      val edges = graph.ufold(Set.empty[(Node, Node)]) { (memo, context) ⇒
-        memo ++ context.incoming.map(i ⇒ (i._2, context.node)) ++ context.outgoing.map(o ⇒ (context.node, o._2))
+      def findValue(node: Node) = SearchNode(graph, node) match {
+        case FindNode(Context(_, _, value, _), _) ⇒ value
+      }
+      val edges = graph.ufold(Set.empty[Any]) { (memo, context) ⇒
+        memo ++
+          context.incoming.map(i ⇒ (findValue(i._2), context.value)) ++
+          context.outgoing.map(o ⇒ (context.value, findValue(o._2)))
       } map { case (from, to) ⇒ s"$from -> $to;\n" } mkString
 
       s"digraph g {\n$edges}"
