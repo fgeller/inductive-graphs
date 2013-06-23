@@ -10,7 +10,10 @@ object Graphs extends App {
   sealed trait Graph[+A, +B] {
     def &:[C >: A, D >: B](context: Context[C, D]) = Graphs.&:(context, this)
 
-    def isEmpty: Boolean
+    def isEmpty: Boolean = this match {
+      case Empty ⇒ true
+      case _     ⇒ false
+    }
 
     def gmap[C >: A, D >: B](f: Context[A, B] ⇒ Context[C, D]): Graph[C, D] = this match {
       case Empty                          ⇒ Empty
@@ -26,7 +29,10 @@ object Graphs extends App {
       case &:(left: Context[A, B], right) ⇒ right.ufold(f(memo, left))(f)
     }
 
-    def nodes: Seq[Node]
+    def nodes: Seq[Node] = this match {
+      case Empty                          ⇒ Seq()
+      case &:(left: Context[A, B], right) ⇒ right.ufold(List(left.node)) { (memo, ctx) ⇒ ctx.node :: memo }
+    }
 
     def undir: Graph[A, B] = gmap { ctx ⇒
       Context(ctx.incoming ++ ctx.outgoing, ctx.node, ctx.value, ctx.incoming ++ ctx.outgoing)
@@ -52,11 +58,12 @@ object Graphs extends App {
     def empty[A, B]: Graph[A, B] = Empty
   }
 
-  case object Empty extends Graph[Nothing, Nothing] {
-    def isEmpty = true
-    def nodes = Seq()
+  case object Empty extends Graph[Nothing, Nothing]
+  final case class &:[A, B](left: Context[A, B], right: Graph[A, B]) extends Graph[A, B] {
+    override def toString = left + " &: " + right
   }
 
+  // Extractor that's &v-like
   case class SearchNode[A, B](graph: Graph[A, B], node: Node)
   object FindNode {
     def unapply[A, B](query: SearchNode[A, B]): Option[(Context[A, B], Graph[A, B])] = {
@@ -70,12 +77,6 @@ object Graphs extends App {
         case (Some(foundContext), restGraph) ⇒ Some(foundContext, restGraph)
       }
     }
-  }
-
-  final case class &:[A, B](left: Context[A, B], right: Graph[A, B]) extends Graph[A, B] {
-    def isEmpty = false
-    def nodes = right.ufold(List(left.node)) { (memo, ctx) ⇒ ctx.node :: memo }
-    override def toString = left + " &: " + right
   }
 
 }
