@@ -8,8 +8,8 @@ class GraphsTest extends FunSpec with ShouldMatchers {
 
   describe("Context") {
     it("knows the successor nodes") {
-      Context(Seq(), 1, 1, Seq((2, 2))).suc should be (Seq(2))
-      Context(Seq(), 1, 1, Seq()).suc should be (Seq())
+      Context(Seq(), 1, 1, Seq((2, 2))).suc should be (Set(2))
+      Context(Seq(), 1, 1, Seq()).suc should be (Set())
     }
   }
 
