@@ -153,7 +153,6 @@ package pair {
 
   case class PairGraph[A, B](left: NodeContext[A, B], right: Graph[A, B]) extends Graph[A, B] with &:[A, B] {
     override def &:[C >: A, D >: B](context: NodeContext[C, D]) = PairGraph(context, this)
-    override def context[C >: A, D >: B](in: Edges[D], node: Node, value: C, out: Edges[D]): NodeContext[C, D] = Context(in, node, value, out)
     override def toString = left + " &: " + right
   }
 
