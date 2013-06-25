@@ -51,7 +51,7 @@ class GraphsTest extends FunSpec with ShouldMatchers {
       val testNode = 2
 
       SearchNode(testGraph, testNode) match {
-        case FindNode(Context(in, 2, label, out), restGraph) ⇒
+        case FoundNode(Context(in, 2, label, out), restGraph) ⇒
           in should be(out)
           label should be(46)
           restGraph should not be testGraph

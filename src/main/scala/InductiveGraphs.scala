@@ -37,7 +37,7 @@ object Graph {
 
   def asDot(graph: Graph[_, _]) = {
     def findValue(node: Node) = SearchNode(graph, node) match {
-      case FindNode(NodeContext(_, _, value, _), _) ⇒ value
+      case FoundNode(NodeContext(_, _, value, _), _) ⇒ value
     }
     val edges = graph.ufold(Set.empty[Any]) { (memo, context) ⇒
       memo ++
@@ -88,18 +88,18 @@ trait Graph[+A, +B] {
   }
 
   def degree(node: Node) = SearchNode(this, node) match {
-    case FindNode(NodeContext(in, _, _, out), _) ⇒ Some(in.size + out.size)
-    case _                                       ⇒ None
+    case FoundNode(NodeContext(in, _, _, out), _) ⇒ Some(in.size + out.size)
+    case _                                        ⇒ None
   }
 
   def delete(node: Node) = SearchNode(this, node) match {
-    case FindNode(_, restGraph) ⇒ restGraph
-    case _                      ⇒ this
+    case FoundNode(_, restGraph) ⇒ restGraph
+    case _                       ⇒ this
   }
 
   def gsuc(node: Node) = SearchNode(this, node) match {
-    case FindNode(NodeContext(_, _, _, out), _) ⇒ out.map(_.node).toSet
-    case _                                      ⇒ Set()
+    case FoundNode(NodeContext(_, _, _, out), _) ⇒ out.map(_.node).toSet
+    case _                                       ⇒ Set()
   }
 
   def roots: Set[Node] = this.ufold(this.nodes) { (memo, context) ⇒
@@ -114,7 +114,7 @@ trait Graph[+A, +B] {
   def children(toVisit: List[Node]): List[Node] = {
     if (toVisit.isEmpty || this.isEmpty) Nil
     else SearchNode(this, toVisit.head) match {
-      case FindNode(context, _) ⇒
+      case FoundNode(context, _) ⇒
         val sorted = children((context.in.map(_.node).toList) ++ toVisit.tail)
         if (sorted contains toVisit.head) sorted
         else toVisit.head :: sorted
@@ -126,7 +126,7 @@ trait Graph[+A, +B] {
 
 // Extractor that's &v-like
 case class SearchNode[A, B](graph: Graph[A, B], node: Node)
-object FindNode {
+object FoundNode {
   def unapply[A, B](query: SearchNode[A, B]): Option[(NodeContext[A, B], Graph[A, B])] = {
     query.graph.ufold((Option.empty[NodeContext[A, B]], Graph.empty[A, B])) { (memo, context) ⇒
       memo match {
