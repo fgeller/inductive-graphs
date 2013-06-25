@@ -1,13 +1,12 @@
+package graphs
+
 import org.scalatest.FunSpec
 import org.scalatest.matchers.ShouldMatchers
 
 class GraphsTest extends FunSpec with ShouldMatchers {
 
-  import Graphs._
-  import Graphs.GraphImpl._
-
   describe("NodeContext") {
-    import Graph._
+
     it("knows the successor nodes") {
       Context(Seq(), 1, 1, Seq(Edge(2, 2))).suc should be(Set(2))
       Context(Seq(), 1, 1, Seq()).suc should be(Set())
