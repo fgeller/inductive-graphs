@@ -1,63 +1,102 @@
-object Graphs extends App {
+object Graphs {
 
   type Node = Int
-  type Adj[+B] = Seq[(B, Node)]
-  case class Context[+A, +B](incoming: Adj[B], node: Node, value: A, outgoing: Adj[B]) {
-    def suc = outgoing.map(_._2).toSet
-    override def toString = s"([${incoming mkString " "}]→ $node($value) →[${outgoing mkString " "}])"
+
+  trait HalfEdge[+B] {
+    def value: B
+    def node: Node
+  }
+
+  type Edges[+B] = Seq[HalfEdge[B]]
+
+  trait NodeContext[+A, +B] {
+    def in: Edges[B]
+    def out: Edges[B]
+    def node: Node
+    def value: A
+
+    def suc = out.map(_.node).toSet
+  }
+
+  object NodeContext {
+    def unapply[A, B](ctx: NodeContext[A, B]): Option[(Edges[B], Node, A, Edges[B])] = Some((ctx.in, ctx.node, ctx.value, ctx.out))
+  }
+
+  case object Empty extends Graph[Nothing, Nothing]
+
+  object GraphImpl {
+
+    case class Context[+A, +B](in: Edges[B], node: Node, value: A, out: Edges[B]) extends NodeContext[A, B] {
+      override def toString = s"([${in.map(e ⇒ (e.value, e.node)) mkString " "}]→ $node($value) →[${out.map(e ⇒ (e.value, e.node)) mkString " "}])"
+    }
+
+    case class PairGraph[A, B](left: NodeContext[A, B], right: Graph[A, B]) extends Graph[A, B] with &:[A, B] {
+      override def &:[C >: A, D >: B](context: NodeContext[C, D]) = PairGraph(context, this)
+      override def context[C >: A, D >: B](in: Edges[D], node: Node, value: C, out: Edges[D]): NodeContext[C, D] = Context(in, node, value, out)
+      override def toString = left + " &: " + right
+    }
+
   }
 
   object Graph {
+
     def empty[A, B]: Graph[A, B] = Empty
+
     def asDot(graph: Graph[_, _]) = {
       def findValue(node: Node) = SearchNode(graph, node) match {
-        case FindNode(Context(_, _, value, _), _) ⇒ value
+        case FindNode(NodeContext(_, _, value, _), _) ⇒ value
       }
       val edges = graph.ufold(Set.empty[Any]) { (memo, context) ⇒
         memo ++
-          context.incoming.map(i ⇒ (findValue(i._2), context.value)) ++
-          context.outgoing.map(o ⇒ (context.value, findValue(o._2)))
+          context.in.map(i ⇒ (findValue(i.node), context.value)) ++
+          context.out.map(o ⇒ (context.value, findValue(o.node)))
       } map { case (from, to) ⇒ s"$from -> $to;\n" } mkString
 
       s"digraph g {\n$edges}"
     }
   }
 
-  sealed trait Graph[+A, +B] {
+  case class Edge[+B](value: B, node: Node) extends HalfEdge[B]
 
-    def &:[C >: A, D >: B](context: Context[C, D]) = Graphs.&:(context, this)
+  trait Graph[+A, +B] {
+
+    def &:[C >: A, D >: B](context: NodeContext[C, D]): Graph[C, D] =
+      GraphImpl.PairGraph(context, this)
+
+    def context[C >: A, D >: B](in: Edges[D], node: Node, value: C, out: Edges[D]): NodeContext[C, D] =
+      GraphImpl.Context(in, node, value, out)
 
     def isEmpty: Boolean = this match {
       case Empty ⇒ true
       case _     ⇒ false
     }
 
-    def gmap[C >: A, D >: B](f: Context[A, B] ⇒ Context[C, D]): Graph[C, D] = this match {
-      case Empty                          ⇒ Empty
-      case &:(left: Context[A, B], right) ⇒ f(left) &: right.gmap(f)
+    def gmap[A, B](f: NodeContext[A, B] ⇒ NodeContext[A, B]): Graph[A, B] = this match {
+      case Empty                              ⇒ Empty
+      case &:(left: NodeContext[A, B], right) ⇒ f(left) &: right.gmap(f)
     }
 
-    def grev: Graph[A, B] = gmap { left: Context[A, B] ⇒
-      Context(left.outgoing, left.node, left.value, left.incoming)
+    def grev: Graph[A, B] = gmap { left: NodeContext[A, B] ⇒
+      context(left.out, left.node, left.value, left.in)
     }
 
-    def ufold[C](memo: C)(f: (C, Context[A, B]) ⇒ C): C = this match {
-      case Empty                          ⇒ memo
-      case &:(left: Context[A, B], right) ⇒ right.ufold(f(memo, left))(f)
+    def ufold[C](memo: C)(f: (C, NodeContext[A, B]) ⇒ C): C = this match {
+      case Empty ⇒ memo
+      case &:(left: NodeContext[A, B], right: Graph[A, B]) ⇒ right.ufold(f(memo, left))(f)
     }
 
     def nodes: Set[Node] = this match {
-      case Empty                          ⇒ Set()
-      case &:(left: Context[A, B], right) ⇒ right.ufold(Set(left.node)) { (memo, ctx) ⇒ memo + ctx.node }
+      case Empty ⇒ Set()
+      case &:(left: NodeContext[A, B], right: Graph[A, B]) ⇒ right.ufold(Set(left.node)) { (memo, ctx) ⇒ memo + ctx.node }
     }
 
-    def undir: Graph[A, B] = gmap { ctx ⇒
-      Context(ctx.incoming ++ ctx.outgoing, ctx.node, ctx.value, ctx.incoming ++ ctx.outgoing)
+    def undir: Graph[A, B] = gmap { ctx: NodeContext[A, B] ⇒
+      context(ctx.in ++ ctx.out, ctx.node, ctx.value, ctx.in ++ ctx.out)
     }
 
     def degree(node: Node) = SearchNode(this, node) match {
-      case FindNode(Context(in, _, _, out), _) ⇒ Some(in.size + out.size)
-      case _                                   ⇒ None
+      case FindNode(NodeContext(in, _, _, out), _) ⇒ Some(in.size + out.size)
+      case _                                       ⇒ None
     }
 
     def delete(node: Node) = SearchNode(this, node) match {
@@ -66,16 +105,16 @@ object Graphs extends App {
     }
 
     def gsuc(node: Node) = SearchNode(this, node) match {
-      case FindNode(Context(_, _, _, out), _) ⇒ out.map(_._2).toSet
-      case _                                  ⇒ Set()
+      case FindNode(NodeContext(_, _, _, out), _) ⇒ out.map(_.node).toSet
+      case _                                      ⇒ Set()
     }
 
     def roots: Set[Node] = this.ufold(this.nodes) { (memo, context) ⇒
-      memo diff context.incoming.map(_._2).toSet
+      memo diff context.in.map(_.node).toSet
     }
 
     def leaves: Set[Node] = this.ufold(this.nodes) { (memo, context) ⇒
-      if (context.incoming.isEmpty) memo
+      if (context.in.isEmpty) memo
       else memo - context.node
     }
 
@@ -83,24 +122,20 @@ object Graphs extends App {
       if (toVisit.isEmpty || this.isEmpty) Nil
       else SearchNode(this, toVisit.head) match {
         case FindNode(context, _) ⇒
-          val sorted = children((context.incoming.map(_._2).toList) ++ toVisit.tail)
+          val sorted = children((context.in.map(_.node).toList) ++ toVisit.tail)
           if (sorted contains toVisit.head) sorted
           else toVisit.head :: sorted
         case _ ⇒ children(toVisit tail)
       }
     }
-  }
 
-  case object Empty extends Graph[Nothing, Nothing]
-  final case class &:[A, B](left: Context[A, B], right: Graph[A, B]) extends Graph[A, B] {
-    override def toString = left + " &: " + right
   }
 
   // Extractor that's &v-like
   case class SearchNode[A, B](graph: Graph[A, B], node: Node)
   object FindNode {
-    def unapply[A, B](query: SearchNode[A, B]): Option[(Context[A, B], Graph[A, B])] = {
-      query.graph.ufold((Option.empty[Context[A, B]], Graph.empty[A, B])) { (memo, context) ⇒
+    def unapply[A, B](query: SearchNode[A, B]): Option[(NodeContext[A, B], Graph[A, B])] = {
+      query.graph.ufold((Option.empty[NodeContext[A, B]], Graph.empty[A, B])) { (memo, context) ⇒
         memo match {
           case (found, graph) if found.isEmpty && context.node == query.node ⇒ (Some(context), graph)
           case (maybeFound, graph) ⇒ (maybeFound, context &: graph)
@@ -110,6 +145,15 @@ object Graphs extends App {
         case (Some(foundContext), restGraph) ⇒ Some(foundContext, restGraph)
       }
     }
+  }
+
+  trait &:[+A, +B] {
+    def left: NodeContext[A, B]
+    def right: Graph[A, B]
+  }
+
+  object &: {
+    def unapply[A, B](and: &:[A, B]): Option[(NodeContext[A, B], Graph[A, B])] = Some((and.left, and.right))
   }
 
 }
