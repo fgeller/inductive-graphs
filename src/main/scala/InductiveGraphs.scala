@@ -31,16 +31,6 @@ case class Context[+A, +B](in: Edges[B], node: Node, value: A, out: Edges[B]) ex
   override def toString = s"([${in.map(e ⇒ (e.value, e.node)) mkString " "}]→ $node($value) →[${out.map(e ⇒ (e.value, e.node)) mkString " "}])"
 }
 
-package pair {
-
-  case class PairGraph[A, B](left: NodeContext[A, B], right: Graph[A, B]) extends Graph[A, B] with &:[A, B] {
-    override def &:[C >: A, D >: B](context: NodeContext[C, D]) = PairGraph(context, this)
-    override def context[C >: A, D >: B](in: Edges[D], node: Node, value: C, out: Edges[D]): NodeContext[C, D] = Context(in, node, value, out)
-    override def toString = left + " &: " + right
-  }
-
-}
-
 object Graph {
 
   def empty[A, B]: Graph[A, B] = Empty
@@ -157,4 +147,14 @@ trait &:[+A, +B] {
 
 object &: {
   def unapply[A, B](and: &:[A, B]): Option[(NodeContext[A, B], Graph[A, B])] = Some((and.left, and.right))
+}
+
+package pair {
+
+  case class PairGraph[A, B](left: NodeContext[A, B], right: Graph[A, B]) extends Graph[A, B] with &:[A, B] {
+    override def &:[C >: A, D >: B](context: NodeContext[C, D]) = PairGraph(context, this)
+    override def context[C >: A, D >: B](in: Edges[D], node: Node, value: C, out: Edges[D]): NodeContext[C, D] = Context(in, node, value, out)
+    override def toString = left + " &: " + right
+  }
+
 }
