@@ -202,4 +202,18 @@ b -> c;
     }
   }
 
+  describe("Pair implementation") {
+
+    it("maintains incoming edges") {
+      val testGraph = Context(Seq(), 2, (), Seq(Edge("2 to 1", 1))) &: Context(Seq(), 1, (), Seq()) &: Empty
+
+      SearchNode(testGraph, 1) match {
+        case FoundNode(Context(in, 1, label, out), restGraph) ⇒
+          in.contains(Edge("2 to 1", 2)) should be(true)
+        case _ ⇒ fail("should find the context for node 1")
+      }
+    }
+
+  }
+
 }
