@@ -152,9 +152,7 @@ object &: {
 package pair {
 
   case class PairGraph[A, B](left: NodeContext[A, B], right: Graph[A, B]) extends Graph[A, B] with &:[A, B] {
-    override def &:[C >: A, D >: B](context: NodeContext[C, D]) = {
-      PairGraph(context, updateEdges(context))
-    }
+    override def &:[C >: A, D >: B](context: NodeContext[C, D]) = PairGraph(context, updateEdges(context))
     override def toString = left + " &: " + right
 
     private def updateEdges[C >: A, D >: B](newContext: NodeContext[C, D]) = this.gmap { original: NodeContext[C, D] ⇒
