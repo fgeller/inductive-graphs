@@ -52,7 +52,7 @@ class GraphsTest extends FunSpec with ShouldMatchers {
 
       SearchNode(testGraph, testNode) match {
         case FoundNode(Context(in, 2, label, out), restGraph) ⇒
-          in should be(out)
+          out should be(Seq(Edge("left", 1)))
           label should be(46)
           restGraph should not be testGraph
         case _ ⇒ fail("should find the context for node 2")
@@ -64,7 +64,7 @@ class GraphsTest extends FunSpec with ShouldMatchers {
         Context(Seq(), 2, 46, Seq()) &:
         Empty)
 
-      testGraph.degree(2) should be(Some(0))
+      testGraph.degree(2) should be(Some(1))
       testGraph.degree(1) should be(Some(1))
       testGraph.degree(0) should be(None)
     }
@@ -83,7 +83,7 @@ class GraphsTest extends FunSpec with ShouldMatchers {
         Context(Seq(), 2, 46, Seq()) &:
         Empty)
 
-      testGraph.delete(1) should be(Context(Seq(), 2, 46, Seq()) &: Empty)
+      testGraph.delete(1) should be(Context(Seq(), 2, 46, Seq(Edge("left", 1))) &: Empty)
       testGraph.delete(2) should be(Context(Seq(Edge("left", 2)), 1, 23, Seq()) &: Empty)
       testGraph.delete(0) should be(testGraph)
     }
@@ -210,6 +210,16 @@ b -> c;
       SearchNode(testGraph, 1) match {
         case FoundNode(Context(in, 1, label, out), restGraph) ⇒
           in.contains(Edge("2 to 1", 2)) should be(true)
+        case _ ⇒ fail("should find the context for node 1")
+      }
+    }
+
+    it("maintains outgoing edges") {
+      val testGraph = Context(Seq(Edge("1 to 2", 1)), 2, (), Seq()) &: Context(Seq(), 1, (), Seq()) &: Empty
+
+      SearchNode(testGraph, 1) match {
+        case FoundNode(Context(in, 1, label, out), restGraph) ⇒
+          out.contains(Edge("1 to 2", 2)) should be(true)
         case _ ⇒ fail("should find the context for node 1")
       }
     }
