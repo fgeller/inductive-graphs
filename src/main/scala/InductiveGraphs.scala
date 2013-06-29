@@ -56,6 +56,9 @@ trait Graph[+A, +B] {
   def &:[C >: A, D >: B](context: NodeContext[C, D]): Graph[C, D] =
     pair.PairGraph(context, this)
 
+  def &+:[C >: A, D >: B](context: NodeContext[C, D]): Graph[C, D] =
+    pair.PairGraph(context, this)
+
   def context[C >: A, D >: B](in: Edges[D], node: Node, value: C, out: Edges[D]): NodeContext[C, D] =
     Context(in, node, value, out)
 
@@ -152,7 +155,8 @@ object &: {
 package pair {
 
   case class PairGraph[A, B](left: NodeContext[A, B], right: Graph[A, B]) extends Graph[A, B] with &:[A, B] {
-    override def &:[C >: A, D >: B](context: NodeContext[C, D]) = PairGraph(context, updateNodes(context))
+    override def &:[C >: A, D >: B](context: NodeContext[C, D]) = PairGraph(context, this)
+    override def &+:[C >: A, D >: B](context: NodeContext[C, D]) = PairGraph(context, updateNodes(context))
     override def toString = left + " &: " + right
 
     private def updateEdges[D >: B](newNode: Node, newEdges: Edges[D], oldNode: Node, oldEdges: Edges[D]) =
