@@ -12,6 +12,7 @@ class ModulesTest extends FunSpec with ShouldMatchers {
     def addModule(newModule: Module) = DependencyGraph(modules + newModule)
     def +(newModule: Module) = addModule(newModule)
     def map(fun: Module ⇒ Module) = DependencyGraph(modules map fun)
+    def find(name: String): Option[Module] = modules.find(_.name == name)
   }
 
   describe("A module") {
@@ -58,6 +59,16 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       val expectedGraph = DependencyGraph(testModules map fun)
 
       testGraph.map(fun) should be(expectedGraph)
+    }
+
+    it("knows nodes by name") {
+      val modA = Module("a")
+      val modB = Module("b")
+      val testGraph = DependencyGraph(Set(modA, modB))
+
+      testGraph.find(modA.name) should be(Some(modA))
+      testGraph.find(modB.name) should be(Some(modB))
+      testGraph.find(this.toString) should be(None)
     }
 
   }
