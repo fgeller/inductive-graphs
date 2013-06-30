@@ -10,6 +10,7 @@ class ModulesTest extends FunSpec with ShouldMatchers {
     def addModule(newModule: Module) = DependencyGraph(modules + newModule)
     def +(newModule: Module) = addModule(newModule)
     def isEmpty = modules isEmpty
+    def map(fun: Module ⇒ Module) = DependencyGraph(modules map fun)
   }
 
   describe("A module") {
@@ -48,6 +49,16 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       val graph = DependencyGraph(modules = initialModules) + newModule
       graph.modules should be(initialModules + newModule)
     }
+
+    it("can be mapped over") {
+      val testModules = Set(Module("a"), Module("b"))
+      val testGraph = DependencyGraph(testModules)
+      def fun(mod: Module) = Module(name = mod.name + mod.name)
+      val expectedGraph = DependencyGraph(testModules map fun)
+
+      testGraph.map(fun) should be(expectedGraph)
+    }
+
   }
 
 }
