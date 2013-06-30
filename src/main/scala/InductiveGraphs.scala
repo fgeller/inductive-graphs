@@ -119,15 +119,19 @@ trait Graph[+A, +B] {
     case _                     ⇒ None
   }
 
-  def children(toVisit: List[Node]): List[NodeContext[A, B]] = {
+  private def findIncoming(toVisit: List[Node]): List[NodeContext[A, B]] =
     if (toVisit.isEmpty || this.isEmpty) Nil
     else SearchNode(this, toVisit.head) match {
       case FoundNode(context, _) ⇒
-        val sorted = children((context.in.map(_.node).toList) ++ toVisit.tail)
+        val sorted = findIncoming((context.in.map(_.node).toList) ++ toVisit.tail)
         if (sorted contains context) sorted
         else context :: sorted
-      case _ ⇒ children(toVisit tail)
+      case _ ⇒ findIncoming(toVisit tail)
     }
+
+  def children(node: Node): List[NodeContext[A, B]] = SearchNode(this, node) match {
+    case FoundNode(context, _) ⇒ findIncoming(context.in.map(_.node).toList)
+    case _                     ⇒ Nil
   }
 
 }

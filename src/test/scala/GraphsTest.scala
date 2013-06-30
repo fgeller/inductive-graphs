@@ -150,7 +150,9 @@ b -> c;
           Context(Seq(Edge((), 5)), 4, 's', Seq()) &+:
           Context(Seq(), 5, 'w', Seq()) &+: Empty
 
-      g.children(g.roots.toList).map(_.node).toSet should be(g.nodes)
+      g.roots ++ g.roots.foldLeft[Set[Types.Node]](Set()) { (memo, root) ⇒
+        g.children(root).map(_.node).toSet ++ memo
+      }.toSet should be(g.nodes)
     }
 
     it("can identify children") {
@@ -161,7 +163,7 @@ b -> c;
           Context(Seq(Edge((), 5)), 4, 's', Seq()) &+:
           Context(Seq(), 5, 'w', Seq()) &+: Empty
 
-      g.children(List(1)).map(_.node) should be(List(1, 4, 2, 3, 5))
+      g.children(1).map(_.node) should be(List(4, 2, 3, 5))
     }
 
     it("its children do not include unneeded nodes") {
@@ -173,7 +175,7 @@ b -> c;
           Context(Seq(Edge((), 5)), 4, 's', Seq()) &+:
           Context(Seq(), 5, 'w', Seq()) &+: Empty
 
-      g.children(List(1)).map(_.node) should be(List(1, 4, 2, 3, 5))
+      g.children(1).map(_.node) should be(List(4, 2, 3, 5))
     }
 
     it("more children tests") {
@@ -194,11 +196,11 @@ b -> c;
           Context(Seq(Edge((), 13)), 12, names(12), Seq()) &+:
           Context(Seq(), 13, names(13), Seq()) &+: Empty
 
-      g.children(List(13)).map(_.node) should be(List(13))
-      g.children(List(12)).map(_.node) should be(List(12, 13))
-      g.children(List(7)).map(_.node) should be(List(7, 8, 11, 13))
-      g.children(List(5)).map(_.node) should be(List(5, 8, 6, 11, 13))
-      g.children(List(0)).map(_.node).toSet should be(Set(0, 1, 2, 3, 4, 5, 6, 8, 10, 11, 13))
+      g.children(13).map(_.node) should be(List())
+      g.children(12).map(_.node) should be(List(13))
+      g.children(7).map(_.node) should be(List(8, 11, 13))
+      g.children(5).map(_.node) should be(List(8, 6, 11, 13))
+      g.children(0).map(_.node).toSet should be(Set(1, 2, 3, 4, 5, 6, 8, 10, 11, 13))
     }
 
     it("finds a node context for a node") {
