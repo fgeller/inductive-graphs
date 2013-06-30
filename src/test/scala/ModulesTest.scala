@@ -8,6 +8,7 @@ class ModulesTest extends FunSpec with ShouldMatchers {
   case class DependencyGraph(modules: Set[Module] = Set()) {
     val graph: Graph[Module, Nothing] = Empty
     def addModule(newModule: Module) = DependencyGraph(modules + newModule)
+    def +(newModule: Module) = addModule(newModule)
     def isEmpty = modules isEmpty
   }
 
@@ -44,7 +45,7 @@ class ModulesTest extends FunSpec with ShouldMatchers {
     it("can add modules") {
       val initialModules = Set(Module(name = "leaf"))
       val newModule = Module(name = "new")
-      val graph = DependencyGraph(modules = initialModules).addModule(newModule)
+      val graph = DependencyGraph(modules = initialModules) + newModule
       graph.modules should be(initialModules + newModule)
     }
   }
