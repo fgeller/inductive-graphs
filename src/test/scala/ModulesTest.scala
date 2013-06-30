@@ -32,6 +32,7 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       if (!modules.exists(_.name == name)) throw new NoSuchElementException
       graph.children(nodeByName(name)).flatMap(node ⇒ find(node.value)).toSet
     }
+    def asDot = Graph.asDot(graph)
   }
 
   describe("A module") {
@@ -98,6 +99,16 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       testGraph.dependants(modA.name) should be(Set(modB))
       testGraph.dependants(modB.name) should be(Set())
       intercept[NoSuchElementException] { testGraph.dependants(this.toString) }
+    }
+
+    it("can be printed in dot format") {
+      val modA = Module("mod a")
+      val modB = Module("mod b", Set(modA))
+      val testGraph = DependencyGraph(Set(modA, modB))
+
+      testGraph.asDot should be("""digraph g {
+mod b -> mod a;
+}""")
     }
 
   }
