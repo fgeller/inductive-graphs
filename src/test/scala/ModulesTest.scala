@@ -107,7 +107,7 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       val testGraph = DependencyGraph(Set(modA, modB))
 
       testGraph.asDot should be("""digraph g {
-mod b -> mod a;
+"mod b" -> "mod a";
 }""")
     }
 

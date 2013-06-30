@@ -43,7 +43,7 @@ object Graph {
       memo ++
         context.in.map(i ⇒ (findValue(i.node), context.value)) ++
         context.out.map(o ⇒ (context.value, findValue(o.node)))
-    } map { case (from, to) ⇒ s"$from -> $to;\n" } mkString
+    } map { case (from, to) ⇒ s""""$from" -> "$to";\n""" } mkString
 
     s"digraph g {\n$edges}"
   }
