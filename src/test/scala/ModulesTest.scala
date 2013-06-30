@@ -5,8 +5,9 @@ import org.scalatest.matchers.ShouldMatchers
 
 class ModulesTest extends FunSpec with ShouldMatchers {
   case class Module(name: String, dependsOn: Set[Module] = Set())
-  case class DependencyGraph(graph: Graph[Module, Nothing] = Empty) {
-    def isEmpty = graph isEmpty
+  case class DependencyGraph(modules: Set[Module] = Set()) {
+    val graph: Graph[Module, Nothing] = Empty
+    def isEmpty = modules isEmpty
   }
 
   describe("A module") {
@@ -33,6 +34,11 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       dependencyGraph.isEmpty should be(true)
     }
 
+    it("hold modules") {
+      val testModules = Set(Module(name = "leaf"))
+      val graph = DependencyGraph(modules = testModules)
+      graph.modules should be(testModules)
+    }
   }
 
 }
