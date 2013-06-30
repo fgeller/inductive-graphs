@@ -150,7 +150,7 @@ b -> c;
           Context(Seq(Edge((), 5)), 4, 's', Seq()) &+:
           Context(Seq(), 5, 'w', Seq()) &+: Empty
 
-      g.children(g.roots.toList).toSet should be(g.nodes)
+      g.children(g.roots.toList).map(_.node).toSet should be(g.nodes)
     }
 
     it("can identify children") {
@@ -161,7 +161,7 @@ b -> c;
           Context(Seq(Edge((), 5)), 4, 's', Seq()) &+:
           Context(Seq(), 5, 'w', Seq()) &+: Empty
 
-      g.children(List(1)) should be(List(1, 4, 2, 3, 5))
+      g.children(List(1)).map(_.node) should be(List(1, 4, 2, 3, 5))
     }
 
     it("its children do not include unneeded nodes") {
@@ -173,7 +173,7 @@ b -> c;
           Context(Seq(Edge((), 5)), 4, 's', Seq()) &+:
           Context(Seq(), 5, 'w', Seq()) &+: Empty
 
-      g.children(List(1)) should be(List(1, 4, 2, 3, 5))
+      g.children(List(1)).map(_.node) should be(List(1, 4, 2, 3, 5))
     }
 
     it("more children tests") {
@@ -194,11 +194,21 @@ b -> c;
           Context(Seq(Edge((), 13)), 12, names(12), Seq()) &+:
           Context(Seq(), 13, names(13), Seq()) &+: Empty
 
-      g.children(List(13)) should be(List(13))
-      g.children(List(12)) should be(List(12, 13))
-      g.children(List(7)) should be(List(7, 8, 11, 13))
-      g.children(List(5)) should be(List(5, 8, 6, 11, 13))
-      g.children(List(0)).toSet should be(Set(0, 1, 2, 3, 4, 5, 6, 8, 10, 11, 13))
+      g.children(List(13)).map(_.node) should be(List(13))
+      g.children(List(12)).map(_.node) should be(List(12, 13))
+      g.children(List(7)).map(_.node) should be(List(7, 8, 11, 13))
+      g.children(List(5)).map(_.node) should be(List(5, 8, 6, 11, 13))
+      g.children(List(0)).map(_.node).toSet should be(Set(0, 1, 2, 3, 4, 5, 6, 8, 10, 11, 13))
+    }
+
+    it("finds a node context for a node") {
+      val contextOne = Context(Seq(), 1, (), Seq())
+      val contextTwo = Context(Seq(), 2, (), Seq())
+      val testGraph = contextTwo &+: contextOne &+: Empty
+
+      testGraph.nodeContext(1) should be(Some(contextOne))
+      testGraph.nodeContext(2) should be(Some(contextTwo))
+      testGraph.nodeContext(3) should be(None)
     }
   }
 

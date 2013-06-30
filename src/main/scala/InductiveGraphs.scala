@@ -114,13 +114,18 @@ trait Graph[+A, +B] {
     else memo - context.node
   }
 
-  def children(toVisit: List[Node]): List[Node] = {
+  def nodeContext(node: Node) = SearchNode(this, node) match {
+    case FoundNode(context, _) ⇒ Some(context)
+    case _                     ⇒ None
+  }
+
+  def children(toVisit: List[Node]): List[NodeContext[A, B]] = {
     if (toVisit.isEmpty || this.isEmpty) Nil
     else SearchNode(this, toVisit.head) match {
       case FoundNode(context, _) ⇒
         val sorted = children((context.in.map(_.node).toList) ++ toVisit.tail)
-        if (sorted contains toVisit.head) sorted
-        else toVisit.head :: sorted
+        if (sorted contains context) sorted
+        else context :: sorted
       case _ ⇒ children(toVisit tail)
     }
   }
