@@ -4,12 +4,13 @@ import org.scalatest.FunSpec
 import org.scalatest.matchers.ShouldMatchers
 
 class ModulesTest extends FunSpec with ShouldMatchers {
+
   case class Module(name: String, dependsOn: Set[Module] = Set())
   case class DependencyGraph(modules: Set[Module] = Set()) {
     val graph: Graph[Module, Nothing] = Empty
+    def isEmpty = modules isEmpty
     def addModule(newModule: Module) = DependencyGraph(modules + newModule)
     def +(newModule: Module) = addModule(newModule)
-    def isEmpty = modules isEmpty
     def map(fun: Module ⇒ Module) = DependencyGraph(modules map fun)
   }
 
