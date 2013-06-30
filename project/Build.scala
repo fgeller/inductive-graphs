@@ -24,7 +24,7 @@ object PlaygroundBuild extends Build {
     testOptions in Test ++= Seq(
       // D: show durations
       // F: show full stack traces
-      Tests.Argument(TestFrameworks.ScalaTest, "-oDF")
+      Tests.Argument(TestFrameworks.ScalaTest, "-oD")
     ),
     javacOptions += "-g",
     // javaOptions in Test += "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5006",
@@ -51,6 +51,5 @@ object PlaygroundBuild extends Build {
       scalaVersion := buildScalaVersion
     ) ++ standardSettings
   )
-
 
 }
