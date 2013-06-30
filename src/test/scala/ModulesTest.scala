@@ -4,15 +4,34 @@ import org.scalatest.FunSpec
 import org.scalatest.matchers.ShouldMatchers
 
 class ModulesTest extends FunSpec with ShouldMatchers {
+  import graphs.Types.Node
 
-  case class Module(name: String, dependsOn: Set[Module] = Set())
+  case class Module(name: String, dependsOn: Set[Module] = Set()) {
+    override def toString = s"Module($name depends on (${dependsOn.map(_.name) mkString ", "}))"
+
+  }
   case class DependencyGraph(modules: Set[Module] = Set()) {
-    val graph: Graph[Module, Nothing] = Empty
+
+    val nodeByName = {
+      val nodesAndNames = (1 to modules.size).zip(modules.map(_.name))
+      nodesAndNames map { case (node, name) ⇒ name → node } toMap
+    }
+    val nodesContexts: Seq[NodeContext[String, String]] = modules.map { mod ⇒
+      val outgoingEdges = mod.dependsOn.map(parent ⇒ Edge(parent.name, nodeByName(parent.name))).toSeq
+      Context(Seq(), nodeByName(mod.name), mod.name, outgoingEdges)
+    } toSeq
+
+    val graph = (Graph.empty[String, String] /: nodesContexts) { (memo, context) ⇒ context &+: memo }
+
     def isEmpty = modules isEmpty
     def addModule(newModule: Module) = DependencyGraph(modules + newModule)
     def +(newModule: Module) = addModule(newModule)
     def map(fun: Module ⇒ Module) = DependencyGraph(modules map fun)
     def find(name: String): Option[Module] = modules.find(_.name == name)
+    def dependants(name: String): Set[Module] = {
+      if (!modules.exists(_.name == name)) throw new NoSuchElementException
+      graph.children(nodeByName(name)).flatMap(node ⇒ find(node.value)).toSet
+    }
   }
 
   describe("A module") {
@@ -69,6 +88,16 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       testGraph.find(modA.name) should be(Some(modA))
       testGraph.find(modB.name) should be(Some(modB))
       testGraph.find(this.toString) should be(None)
+    }
+
+    it("finds dependants") {
+      val modA = Module("mod a")
+      val modB = Module("mod b", Set(modA))
+      val testGraph = DependencyGraph(Set(modA, modB))
+
+      testGraph.dependants(modA.name) should be(Set(modB))
+      testGraph.dependants(modB.name) should be(Set())
+      intercept[NoSuchElementException] { testGraph.dependants(this.toString) }
     }
 
   }
