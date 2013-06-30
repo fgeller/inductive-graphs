@@ -27,14 +27,14 @@ class ModulesTest extends FunSpec with ShouldMatchers {
 
   }
 
-  describe("Dependency graphs") {
+  describe("A dependency graph") {
 
-    it("start out empty") {
+    it("starts out empty") {
       val dependencyGraph = DependencyGraph()
       dependencyGraph.isEmpty should be(true)
     }
 
-    it("hold modules") {
+    it("holds modules") {
       val testModules = Set(Module(name = "leaf"))
       val graph = DependencyGraph(modules = testModules)
       graph.modules should be(testModules)
