@@ -21,7 +21,28 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       Context(Seq(), nodeByName(mod.name), mod.name, outgoingEdges)
     } toSeq
 
-    val graph = (Graph.empty[String, String] /: nodesContexts) { (memo, context) ⇒ context &+: memo }
+    val sortedContexts = {
+      def hasNodeContext(seq: Seq[NodeContext[String, String]], node: Node) =
+        seq.exists(_.node == node)
+
+      def rec(
+        toSort: Seq[NodeContext[String, String]],
+        sorted: Seq[NodeContext[String, String]],
+        nopFlag: Option[(NodeContext[String, String], Seq[NodeContext[String, String]])] = None): Seq[NodeContext[String, String]] = {
+        if (toSort isEmpty)
+          sorted
+        else if (toSort.head.out.forall(edge ⇒ hasNodeContext(sorted, edge.node)))
+          rec(toSort.tail, sorted :+ toSort.head)
+        else {
+          if (!nopFlag.isEmpty && nopFlag == (toSort.head, sorted)) throw new IllegalArgumentException
+          else rec(toSort.tail :+ toSort.head, sorted, Some((toSort.head, sorted)))
+        }
+      }
+
+      rec(nodesContexts, Seq())
+    }
+
+    val graph = (Graph.empty[String, String] /: sortedContexts) { (memo, context) ⇒ context &+: memo }
 
     def isEmpty = modules isEmpty
     def addModule(newModule: Module) = DependencyGraph(modules + newModule)
