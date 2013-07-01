@@ -22,21 +22,18 @@ class ModulesTest extends FunSpec with ShouldMatchers {
     } toSeq
 
     val sortedContexts = {
-      def hasNodeContext(seq: Seq[NodeContext[String, String]], node: Node) =
-        seq.exists(_.node == node)
+      type Nodes = Seq[NodeContext[String, String]]
 
-      def rec(
-        toSort: Seq[NodeContext[String, String]],
-        sorted: Seq[NodeContext[String, String]],
-        nopFlag: Option[(NodeContext[String, String], Seq[NodeContext[String, String]])] = None): Seq[NodeContext[String, String]] = {
+      def rec(toSort: Nodes, sorted: Nodes, nopFlag: Option[(NodeContext[String, String], Nodes)] = None): Nodes = {
         if (toSort isEmpty)
           sorted
-        else if (toSort.head.out.forall(edge ⇒ hasNodeContext(sorted, edge.node)))
+        else if (toSort.head.out.forall(edge ⇒ sorted.exists(_.node == edge.node)))
           rec(toSort.tail, sorted :+ toSort.head)
-        else {
-          if (!nopFlag.isEmpty && nopFlag == (toSort.head, sorted)) throw new IllegalArgumentException
-          else rec(toSort.tail :+ toSort.head, sorted, Some((toSort.head, sorted)))
-        }
+        else if (!nopFlag.isEmpty && nopFlag == (toSort.head, sorted))
+          throw new IllegalArgumentException
+        else
+          rec(toSort.tail :+ toSort.head, sorted, Some((toSort.head, sorted)))
+
       }
 
       rec(nodesContexts, Seq())
