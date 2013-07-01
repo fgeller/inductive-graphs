@@ -16,25 +16,24 @@ class ModulesTest extends FunSpec with ShouldMatchers {
       val nodesAndNames = (1 to modules.size).zip(modules.map(_.name))
       nodesAndNames map { case (node, name) ⇒ name → node } toMap
     }
-    val nodesContexts: Seq[NodeContext[String, String]] = modules.map { mod ⇒
-      val outgoingEdges = mod.dependsOn.map(parent ⇒ Edge(parent.name, nodeByName(parent.name))).toSeq
-      Context(Seq(), nodeByName(mod.name), mod.name, outgoingEdges)
-    } toSeq
 
     val sortedContexts = {
-      type Nodes = Seq[NodeContext[String, String]]
+      type ModuleNode = NodeContext[String, String]
+      type Nodes = Seq[ModuleNode]
+      def knowsOutgoing(known: Nodes, node: ModuleNode) =
+        node.out.forall(edge ⇒ known.exists(_.node == edge.node))
 
-      def rec(toSort: Nodes, sorted: Nodes, nopFlag: Option[(NodeContext[String, String], Nodes)] = None): Nodes = {
-        if (toSort isEmpty)
-          sorted
-        else if (toSort.head.out.forall(edge ⇒ sorted.exists(_.node == edge.node)))
-          rec(toSort.tail, sorted :+ toSort.head)
-        else if (!nopFlag.isEmpty && nopFlag == (toSort.head, sorted))
-          throw new IllegalArgumentException("Caught in a loop.")
-        else
-          rec(toSort.tail :+ toSort.head, sorted, Some((toSort.head, sorted)))
-
+      def rec(toSort: Nodes, sorted: Nodes, loopFlag: Option[(ModuleNode, Nodes)] = None): Nodes = toSort.toList match {
+        case Nil                                         ⇒ sorted
+        case head :: tail if knowsOutgoing(sorted, head) ⇒ rec(tail, sorted :+ head)
+        case head :: _ if loopFlag == Some(head, sorted) ⇒ throw new IllegalArgumentException("Caught in a loop.")
+        case head :: tail                                ⇒ rec(tail :+ head, sorted, Some((head, sorted)))
       }
+
+      val nodesContexts: Seq[NodeContext[String, String]] = modules.map { mod ⇒
+        val outgoingEdges = mod.dependsOn.map(parent ⇒ Edge(parent.name, nodeByName(parent.name))).toSeq
+        Context(Seq(), nodeByName(mod.name), mod.name, outgoingEdges)
+      }.toSeq
 
       rec(nodesContexts, Seq())
     }
