@@ -30,7 +30,7 @@ class ModulesTest extends FunSpec with ShouldMatchers {
         else if (toSort.head.out.forall(edge ⇒ sorted.exists(_.node == edge.node)))
           rec(toSort.tail, sorted :+ toSort.head)
         else if (!nopFlag.isEmpty && nopFlag == (toSort.head, sorted))
-          throw new IllegalArgumentException
+          throw new IllegalArgumentException("Caught in a loop.")
         else
           rec(toSort.tail :+ toSort.head, sorted, Some((toSort.head, sorted)))
 
